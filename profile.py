@@ -2,7 +2,7 @@ from datetime import datetime
 from typing import get_type_hints
 
 
-DATETIME_FORMAT = "%Y-%d-%m"
+DEFAULT_DATETIME_FORMAT = "%Y-%m-%d"
 
 
 class Profile:
@@ -17,13 +17,13 @@ class Profile:
     def __init__(self, data: dict):
         for key, value in data.items():
             setattr(self, key, value)
-        self.created_date: str = datetime.now().strftime(DATETIME_FORMAT)
+        self.created_date: str = datetime.now().strftime(DEFAULT_DATETIME_FORMAT)
 
     @property
     def age(self):
-        birth_date = datetime.strptime(self.birthday, DATETIME_FORMAT)
-        diff = int((datetime.now() - birth_date).days / 365)
-        return diff
+        birth_date = datetime.strptime(self.birthday, DEFAULT_DATETIME_FORMAT)
+        calculated_age = int((datetime.now() - birth_date).days / 365)
+        return calculated_age
 
     def show(self):
         print(
@@ -36,31 +36,35 @@ class Profile:
             f'Worked years: {self.worked_years}'
         )
 
+    def to_dict(self):
+        return vars(self)
+
 
 class ProfileManager:
 
-    # keys = [
-    #     'first_name',
-    #     'second_name',
-    #     'middle_name',
-    #     'birthday',
-    #     'work',
-    #     'worked_years',
-    # ]
-
     def __init__(self):
         self.profiles = []
+        # получение всех полей из класса Profile
         self.profile_fields = list(Profile.__annotations__.keys())
 
     def create(self, data: dict):
         if self.is_create_data_valid(data=data):
             profile = Profile(data=data)
             self.profiles.append(profile)
+        else:
+            print(
+                f'Не удалось создать профиль {data}'
+            )
 
     def update(self, profile_index: int, data: dict):
-        profile = self.profiles[profile_index]
-        for key, value in data.items():
-            setattr(profile, key, value)
+        if self.is_profile_index_valid(profile_index) and self.is_update_data_valid(data=data):
+            profile = self.profiles[profile_index]
+            for key, value in data.items():
+                setattr(profile, key, value)
+        else:
+            print(
+                f'Не удалось обновить данные профиля {profile_index} на данные {data}'
+            )
 
     @property
     def count(self):
@@ -85,9 +89,9 @@ class ProfileManager:
 
         return self.is_datetime_format_valid(date_sting=data['birthday'])
 
-    def is_datetime_format_valid(self, date_sting: str):
+    def is_datetime_format_valid(self, date_sting: str, datetime_format: str = DEFAULT_DATETIME_FORMAT):
         try:
-            datetime.strptime(date_sting, DATETIME_FORMAT)
+            datetime.strptime(date_sting, datetime_format)
             return True
         except ValueError:
             return False
@@ -99,13 +103,17 @@ class ProfileManager:
         type_hints = get_type_hints(Profile)
 
         for key in data.keys():
-            right_type = type_hints.get(key)
-            if key not in self.profile_fields or not isinstance(data[key], right_type):
+            if key not in self.profile_fields or not isinstance(data[key], type_hints.get(key)):
                 return False
+
+        date = data.get('birthday')
+
+        if date is not None:
+            return self.is_datetime_format_valid(date_sting=date)
 
         return True
 
     def is_profile_index_valid(self, index: int):
-        if not index.is_digit() or index not in range(len(self.profiles)):
+        if not isinstance(index, int) or index not in range(len(self.profiles)):
             return False
         return True
