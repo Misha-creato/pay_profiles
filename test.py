@@ -1,6 +1,7 @@
 import unittest
 from datetime import datetime
 from profile import Profile, ProfileManager, DEFAULT_DATETIME_FORMAT
+from pay import Pay
 
 
 class TestProfiles(unittest.TestCase):
@@ -76,41 +77,28 @@ class TestProfiles(unittest.TestCase):
             "years": 6
         }
 
-    # create data validation
-    def test_create_data_validation_true(self):
-        result = self.profile_manager.is_create_data_valid(data=self.create_data_correct_1)
-        self.assertTrue(result)
+    def test_is_create_data_valid(self):
+        fixtures = [
+            (self.create_data_correct_1, True),
+            (self.create_data_incorrect_1, False),
+            (self.create_data_incorrect_2, False),
+            (self.create_data_incorrect_3, False),
+            (self.create_data_incorrect_4, False),
+            (self.create_data_incorrect_5, False),
+        ]
+        for data, value in fixtures:
+            result = self.profile_manager.is_create_data_valid(data=data)
+            self.assertEqual(result, value)
 
-    def test_create_data_validation_false_case_1(self):
-        result = self.profile_manager.is_create_data_valid(data=self.create_data_incorrect_1)
-        self.assertFalse(result)
+    def test_is_update_data_valid(self):
+        fixtures = [
+            (self.update_data_correct, True),
+            (self.update_data_incorrect, False)
+        ]
+        for data, value in fixtures:
+            result = self.profile_manager.is_update_data_valid(data=data)
+            self.assertEqual(result, value)
 
-    def test_create_data_validation_false_case_2(self):
-        result = self.profile_manager.is_create_data_valid(data=self.create_data_incorrect_2)
-        self.assertFalse(result)
-
-    def test_create_data_validation_false_case_3(self):
-        result = self.profile_manager.is_create_data_valid(data=self.create_data_incorrect_3)
-        self.assertFalse(result)
-
-    def test_create_data_validation_false_case_4(self):
-        result = self.profile_manager.is_create_data_valid(data=self.create_data_incorrect_4)
-        self.assertFalse(result)
-
-    def test_create_data_validation_false_case_5(self):
-        result = self.profile_manager.is_create_data_valid(data=self.create_data_incorrect_5)
-        self.assertFalse(result)
-
-    # update data validation
-    def test_update_data_validation_true(self):
-        result = self.profile_manager.is_update_data_valid(data=self.update_data_correct)
-        self.assertTrue(result)
-
-    def test_update_data_validation_false(self):
-        result = self.profile_manager.is_update_data_valid(data=self.update_data_incorrect)
-        self.assertFalse(result)
-
-    # create profile
     def test_create_profile(self):
         self.profile_manager.create(data=self.create_data_correct_1)
         self.assertEqual(len(self.profile_manager.profiles), 1)
@@ -121,7 +109,6 @@ class TestProfiles(unittest.TestCase):
         date_today = datetime.now().date().strftime(DEFAULT_DATETIME_FORMAT)
         self.assertEqual(profile.created_date, date_today)
 
-    # update profile
     def test_update_profile(self):
         self.profile_manager.create(data=self.create_data_correct_1)
         profile = self.profile_manager.profiles[0]
@@ -129,7 +116,18 @@ class TestProfiles(unittest.TestCase):
         for key, value in self.update_data_correct.items():
             self.assertEqual(getattr(profile, key), value)
 
-    # profile age
     def test_profile_age(self):
         profile = Profile(data=self.create_data_correct_2)
         self.assertEqual(profile.age, 38)
+
+    def test_pay(self):
+        pay = Pay()
+        data = {
+                "requisite": "+71234567890",
+                "amount": 123.45,
+            }
+        self.profile_manager.create(data=self.create_data_correct_2)
+        profile = self.profile_manager.profiles[0]
+        data['user_data'] = profile.to_dict()
+        result = pay.pay(data=data)
+        self.assertEqual(result, 200)
