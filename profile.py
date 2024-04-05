@@ -26,6 +26,12 @@ class Profile:
         return calculated_age
 
     def show(self):
+        """
+            Вывод профиля
+
+            Returns:
+                None
+        """
         print(
             f'First name: {self.first_name}'
             f'Second name: {self.second_name}'
@@ -37,7 +43,15 @@ class Profile:
         )
 
     def to_dict(self):
-        return vars(self)
+        """
+            Приведение данных профиля к словарю
+
+            Returns:
+                Словарь данных
+        """
+        data = vars(self)
+        data['age'] = self.age
+        return data
 
 
 class ProfileManager:
@@ -48,6 +62,16 @@ class ProfileManager:
         self.profile_fields = list(Profile.__annotations__.keys())
 
     def create(self, data: dict):
+        """
+            Создание профиля
+
+            Args:
+                data: данные профиля
+
+            Returns:
+                None
+        """
+
         if self.is_create_data_valid(data=data):
             profile = Profile(data=data)
             self.profiles.append(profile)
@@ -57,7 +81,18 @@ class ProfileManager:
             )
 
     def update(self, profile_index: int, data: dict):
-        if self.is_profile_index_valid(profile_index) and self.is_update_data_valid(data=data):
+        """
+            Обновление профиля
+
+            Args:
+                profile_index: индекс профиля
+                data: данные профиля
+
+            Returns:
+                None
+        """
+
+        if self.is_profile_index_valid(index=profile_index) and self.is_update_data_valid(data=data):
             profile = self.profiles[profile_index]
             for key, value in data.items():
                 setattr(profile, key, value)
@@ -66,17 +101,55 @@ class ProfileManager:
                 f'Не удалось обновить данные профиля {profile_index} на данные {data}'
             )
 
+    def get_profile(self, profile_index: int):
+        """
+            Получение профиля
+
+            Args:
+                profile_index: индекс профиля
+
+            Returns:
+                Профиль
+        """
+
+        if self.is_profile_index_valid(index=profile_index):
+            return self.profiles[profile_index]
+
     @property
     def count(self):
+        """
+            Подсчет количества профилей
+
+            Returns:
+                Количество профилей
+        """
+
         return len(self.profiles)
 
     def show_all_profiles(self):
+        """
+            Вывод всех профилей
+
+            Returns:
+                None
+        """
         count = 1
         for profile in self.profiles:
             print(f'\nProfile {count}')
             profile.show()
+            count += 1
 
     def is_create_data_valid(self, data: dict):
+        """
+            Проверка данных для создания профиля
+
+            Args:
+                data: данные для проверки
+
+            Returns:
+                Статус проверки
+        """
+
         if not isinstance(data, dict):
             return False
 
@@ -90,6 +163,17 @@ class ProfileManager:
         return self.is_datetime_format_valid(date_sting=data['birthday'])
 
     def is_datetime_format_valid(self, date_sting: str, datetime_format: str = DEFAULT_DATETIME_FORMAT):
+        """
+            Проверка формата datetime
+
+            Args:
+                date_sting: строка для проверки
+                datetime_format: формат datetime
+
+            Returns:
+                Статус проверки
+        """
+
         try:
             datetime.strptime(date_sting, datetime_format)
             return True
@@ -97,6 +181,16 @@ class ProfileManager:
             return False
 
     def is_update_data_valid(self, data: dict):
+        """
+            Проверка данных для обновления профиля
+
+            Args:
+                data: данные для проверки
+
+            Returns:
+                Статус проверки
+        """
+
         if not isinstance(data, dict):
             return False
 
@@ -114,6 +208,16 @@ class ProfileManager:
         return True
 
     def is_profile_index_valid(self, index: int):
+        """
+           Проверка индекса профиля
+
+           Args:
+               index: индекс профиля
+
+           Returns:
+               Статус проверки
+       """
+
         if not isinstance(index, int) or index not in range(len(self.profiles)):
             return False
         return True
